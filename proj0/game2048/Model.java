@@ -94,7 +94,7 @@ public class Model extends Observable {
         setChanged();
     }
 
-    /** Tilt the board toward SIDE. Return true iff this changes the board.
+    /** Tilt the board toward SIDE. Return true if this changes the board.
      *
      * 1. If two Tile objects are adjacent in the direction of motion and have
      *    the same value, they are merged into one Tile of twice the original
@@ -113,6 +113,40 @@ public class Model extends Observable {
         // TODO: Modify this.board (and perhaps this.score) to account
         // for the tilt to the Side SIDE. If the board changed, set the
         // changed local variable to true.
+        board.setViewingPerspective(side);
+
+        for(int i =0 ; i < board.size();++i){
+            int top = board.size() - 1;//如果发生了合并，证明已经有一格无法移动，收缩
+            for(int j = board.size() - 2  ; j >= 0 ; --j){//从上到下检测，既先检测靠近边框的块
+
+                Tile cur = board.tile(i,j); // 当前检测的块
+                if(cur == null) continue;
+
+                for(int row = j + 1; row <= top ; row++){
+                    Tile road = board.tile(i,row);//遍历整列
+                    if(road == null && row != top) continue;
+
+                    if(road == null) {//如果已经到顶且块为空，则直接移动
+                        board.move(i,row,cur);
+                        changed = true;
+                        continue;
+                    }
+
+                    if(road.value() == cur.value()){//数值相等，发生合并
+                        board.move(i,row,cur);
+                        changed = true;
+                        score += road.value() * 2;
+                        top = row -1 ;//将遍历点约束在合并点之下
+                    }else{
+                        board.move(i,row - 1,cur);//数值不等，移动到上一格即可
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        board.setViewingPerspective(Side.NORTH);//范用不同方向
+        // TODO:由于无法修改Board中的函数，并且因某些原因无法正确判断移动，所以在调用move后均判断为真
 
         checkGameOver();
         if (changed) {
@@ -138,6 +172,11 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for(int i =0 ; i < b.size();++i){
+            for(int j =0 ; j < b.size();++j){
+                if(b.tile(i,j) == null) return true;
+            }
+        }
         return false;
     }
 
@@ -148,6 +187,13 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for(int i =0 ; i < b.size();++i){
+            for(int j =0 ; j < b.size();++j){
+                if(b.tile(i,j) != null) {
+                    if (b.tile(i, j).value() == MAX_PIECE) return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -159,6 +205,29 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        for(int i =0 ; i < b.size();++i){
+            for(int j =0 ; j < b.size();++j){
+                Tile curr = b.tile(i, j);
+                if (curr == null) {
+                    return true;
+                }
+
+                if (j + 1 < b.size()) {
+                    Tile right = b.tile(i, j + 1);
+                    if (right != null && right.value() == curr.value()) {
+                        return true;
+                    }
+                }
+
+                if (i + 1 < b.size()) {
+                    Tile down = b.tile(i + 1, j);
+                    if (down != null && down.value() == curr.value()) {
+                        return true;
+                    }
+                }
+            }
+        }
+
         return false;
     }
 
