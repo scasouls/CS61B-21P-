@@ -18,6 +18,12 @@ public class AListNoResizing<Item> {
     private Item[] items;
     private int size;
 
+    private void resize(int capacity) {
+        Item[] a = (Item[]) new Object[capacity];
+        System.arraycopy(items, 0, a, 0, size);
+        items = a;
+    }
+
     /** Creates an empty list. */
     public AListNoResizing() {
         items = (Item[]) new Object[1000];
@@ -26,6 +32,10 @@ public class AListNoResizing<Item> {
 
     /** Inserts X into the back of the list. */
     public void addLast(Item x) {
+        if (size == items.length) {
+            resize(size*2);
+        }
+
         items[size] = x;
         size = size + 1;
     }
